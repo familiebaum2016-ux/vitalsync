@@ -1,0 +1,1497 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kassenprogramm Cloud – DC Dartageddon / SV Netphen</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #1a1a2e;
+  color: #eee;
+  min-height: 100vh;
+  padding: 20px;
+}
+h1 { text-align: center; margin-bottom: 20px; color: #ffcc29; }
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #444;
+  flex-wrap: wrap;
+}
+.tab-btn {
+  padding: 12px 24px;
+  background: #2d2d44;
+  color: #ccc;
+  border: none;
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.tab-btn.active {
+  background: #ffcc29;
+  color: #1a1a2e;
+}
+.tab-btn:hover:not(.active) { background: #3d3d5c; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.controls input {
+  flex: 1;
+  min-width: 200px;
+  padding: 12px;
+  background: #2d2d44;
+  border: 2px solid #444;
+  color: #eee;
+  border-radius: 8px;
+  font-size: 16px;
+}
+.controls input:focus { outline: none; border-color: #ffcc29; }
+.btn {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.btn-primary { background: #ffcc29; color: #1a1a2e; }
+.btn-primary:hover { background: #ffd94d; }
+.btn-success { background: #2ecc71; color: white; }
+.btn-success:hover { background: #27ae60; }
+.btn-warning { background: #e67e22; color: white; }
+.btn-warning:hover { background: #d35400; }
+.btn-danger { background: #e74c3c; color: white; }
+.btn-danger:hover { background: #c0392b; }
+.btn-secondary { background: #34495e; color: white; }
+.btn-secondary:hover { background: #2c3e50; }
+
+.guest-list { display: grid; gap: 15px; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
+.guest-card {
+  background: #2d2d44;
+  border: 2px solid #444;
+  border-radius: 12px;
+  padding: 15px;
+  transition: border-color 0.2s;
+}
+.guest-card.highlight { border-color: #ffcc29; box-shadow: 0 0 20px rgba(255,204,41,0.3); }
+.guest-card.paid { opacity: 0.7; border-color: #2ecc71; }
+.guest-card.open-tab { border-color: #e67e22; }
+.guest-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffcc29;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.guest-name .total {
+  color: #2ecc71;
+  font-size: 18px;
+}
+.item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #3d3d5c;
+  gap: 8px;
+}
+.item-row:last-of-type { border-bottom: none; }
+.item-label {
+  flex: 1;
+  font-size: 14px;
+}
+.item-label .price {
+  color: #999;
+  font-size: 12px;
+  display: block;
+}
+.counter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.counter button {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #ffcc29;
+  color: #1a1a2e;
+  font-weight: bold;
+  font-size: 18px;
+  cursor: pointer;
+}
+.counter button:hover { background: #ffd94d; }
+.counter button.minus { background: #e74c3c; color: white; }
+.counter button.minus:hover { background: #c0392b; }
+.counter .count {
+  min-width: 30px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 16px;
+}
+.essen-input {
+  width: 80px;
+  padding: 6px;
+  background: #1a1a2e;
+  border: 1px solid #555;
+  color: #eee;
+  border-radius: 4px;
+  text-align: right;
+}
+.card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.card-actions .btn { flex: 1; padding: 10px; font-size: 13px; }
+
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+.modal-overlay.active { display: flex; }
+.modal {
+  background: #2d2d44;
+  border-radius: 12px;
+  padding: 25px;
+  max-width: 500px;
+  width: 100%;
+  border: 2px solid #ffcc29;
+}
+.modal h3 { color: #ffcc29; margin-bottom: 15px; }
+.modal p { margin-bottom: 20px; line-height: 1.5; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+
+.earnings-summary {
+  background: #2d2d44;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.earnings-block {
+  padding: 15px;
+  background: #1a1a2e;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  border-left: 4px solid #ffcc29;
+}
+.earnings-block h3 { color: #ffcc29; margin-bottom: 10px; }
+.earnings-block .row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+.earnings-block .total-row {
+  font-weight: bold;
+  font-size: 18px;
+  border-top: 1px solid #444;
+  margin-top: 8px;
+  padding-top: 8px;
+  color: #2ecc71;
+}
+.date-selector {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.date-selector select,
+.date-selector input {
+  padding: 10px;
+  background: #2d2d44;
+  border: 2px solid #444;
+  color: #eee;
+  border-radius: 8px;
+  font-size: 15px;
+  min-width: 200px;
+}
+.empty {
+  text-align: center;
+  padding: 40px;
+  color: #777;
+  font-style: italic;
+}
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: #ffcc29;
+  color: #1a1a2e;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  margin-left: 6px;
+}
+
+
+/* Auth & Sync */
+.auth-screen {
+  min-height: calc(100vh - 40px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.auth-card {
+  width: min(760px, 100%);
+  background: linear-gradient(145deg, #2d2d44, #24243a);
+  border: 2px solid #ffcc29;
+  border-radius: 18px;
+  padding: 28px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.35);
+}
+.auth-card h2 { color: #ffcc29; margin-bottom: 8px; }
+.auth-card p { color: #ccc; line-height: 1.5; margin-bottom: 16px; }
+.auth-grid { display: grid; gap: 12px; }
+.auth-grid input {
+  width: 100%;
+  padding: 13px;
+  background: #1a1a2e;
+  border: 2px solid #444;
+  color: #eee;
+  border-radius: 8px;
+  font-size: 15px;
+}
+.auth-grid input:focus { outline: none; border-color: #ffcc29; }
+.auth-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.auth-message {
+  min-height: 22px;
+  color: #ffcc29;
+  font-weight: 600;
+  margin-top: 12px;
+}
+.setup-box {
+  margin-top: 18px;
+  padding: 14px;
+  border: 1px solid #555;
+  border-radius: 10px;
+  background: rgba(26,26,46,0.72);
+}
+.setup-box summary { cursor: pointer; color: #ffcc29; font-weight: 700; }
+.setup-box code, .setup-box pre {
+  display: block;
+  white-space: pre-wrap;
+  background: #111126;
+  border-radius: 8px;
+  padding: 12px;
+  color: #e8e8e8;
+  font-size: 12px;
+  overflow: auto;
+}
+.syncbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  background: #2d2d44;
+  border: 1px solid #444;
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.syncbar .who { color: #ccc; font-size: 14px; }
+.sync-status { color: #ffcc29; font-weight: 700; font-size: 13px; }
+.loan-note {
+  color: #f1c40f;
+  font-size: 12px;
+  display: block;
+  margin-top: 2px;
+}
+@media (max-width: 640px) { .auth-row { grid-template-columns: 1fr; } }
+
+</style>
+</head>
+<body>
+
+
+<div id="authScreen" class="auth-screen">
+  <div class="auth-card">
+    <h2>Kassenprogramm Anmeldung – Supabase fertig eingerichtet</h2>
+    <p>Bitte mit E-Mail und Passwort anmelden. Die Kasse wird online gespeichert und kann von jedem Gerät geöffnet werden.</p>
+
+    <div class="auth-grid">
+      <input type="hidden" id="supabaseUrlInput">
+      <input type="hidden" id="supabaseKeyInput">
+      <div style="padding:10px 12px; border-radius:8px; background:#1a1a2e; border:1px solid #2ecc71; color:#2ecc71; font-weight:700;">
+        Supabase ist fest eingerichtet – bitte nur E-Mail und Passwort eingeben.
+      </div>
+      <div class="auth-row">
+        <input type="email" id="loginEmail" placeholder="E-Mail / Benutzer" autocomplete="username">
+        <input type="password" id="loginPassword" placeholder="Passwort" autocomplete="current-password">
+      </div>
+      <div class="auth-row">
+        <button class="btn btn-primary" onclick="signIn()">Anmelden & synchronisieren</button>
+        <button class="btn btn-secondary" onclick="signUp()">Konto erstellen</button>
+      </div>
+    </div>
+
+    <div id="authMessage" class="auth-message"></div>
+
+    <details class="setup-box">
+      <summary>Supabase-Einrichtung anzeigen</summary>
+      <p>Lege in Supabase Auth die Benutzer an und führe im SQL Editor diese Tabelle/Policies aus:</p>
+      <pre>create table if not exists public.kasse_state (
+  id text primary key,
+  data jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now(),
+  updated_by uuid references auth.users(id)
+);
+
+alter table public.kasse_state enable row level security;
+
+drop policy if exists "kasse_state_select" on public.kasse_state;
+drop policy if exists "kasse_state_insert" on public.kasse_state;
+drop policy if exists "kasse_state_update" on public.kasse_state;
+
+create policy "kasse_state_select"
+on public.kasse_state for select
+to authenticated
+using (id = 'shared');
+
+create policy "kasse_state_insert"
+on public.kasse_state for insert
+to authenticated
+with check (id = 'shared');
+
+create policy "kasse_state_update"
+on public.kasse_state for update
+to authenticated
+using (id = 'shared')
+with check (id = 'shared');</pre>
+      <p>Für eine feste Seite kannst du URL und anon key direkt im Script bei <code>DEFAULT_SUPABASE_URL</code> und <code>DEFAULT_SUPABASE_ANON_KEY</code> eintragen.</p>
+    </details>
+  </div>
+</div>
+
+<div id="app" hidden>
+<h1>🍺 Kassenprogramm – DC Dartageddon / SV Netphen 🎯</h1>
+
+<div class="syncbar">
+  <div>
+    <div class="sync-status" id="syncStatus">Nicht synchronisiert</div>
+    <div class="who" id="userInfo"></div>
+  </div>
+  <div class="card-actions" style="margin-top:0;">
+    <button class="btn btn-secondary" onclick="syncFromCloud()">Cloud neu laden</button>
+    <button class="btn btn-danger" onclick="signOut()">Abmelden</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('aktuell')">Aktuell <span id="badgeAktuell" class="badge">0</span></button>
+  <button class="tab-btn" onclick="switchTab('offen')">Offene Deckel <span id="badgeOffen" class="badge">0</span></button>
+  <button class="tab-btn" onclick="switchTab('einnahmen')">Tageseinnahmen</button>
+  <button class="tab-btn" onclick="switchTab('monat')">Monatseinnahmen</button>
+  <button class="tab-btn" onclick="switchTab('jahr')">Jahresübersicht</button>
+  <button class="tab-btn" onclick="switchTab('automaten')">Automateneinnahmen</button>
+</div>
+
+<!-- TAB: Aktuell -->
+<div id="tab-aktuell" class="tab-content active">
+  <div class="controls">
+    <input type="text" id="searchInput" placeholder="Name suchen oder neu eintragen..." oninput="handleSearch()">
+    <button class="btn btn-primary" onclick="addGuest()">➕ Gast hinzufügen</button>
+    <button class="btn btn-danger" onclick="confirmClearAll()">🗑️ Alles löschen</button>
+  </div>
+  <div class="controls" style="background:#2d2d44; padding:12px; border-radius:8px; border:2px solid #e67e22;">
+    <label style="align-self:center; color:#e67e22; font-weight:600;">🍽️ Essensbeitrag pro Portion (gilt für alle Gäste):</label>
+    <input type="number" id="globalEssenPrice" step="0.10" min="0" placeholder="z.B. 5.00" style="max-width:150px;" oninput="setGlobalEssenPrice(this.value)">
+    <span style="align-self:center; color:#ccc;">€</span>
+  </div>
+  <div id="guestList" class="guest-list"></div>
+  <h2 style="margin: 30px 0 15px; color: #2ecc71;">✅ Bezahlt (heute)</h2>
+  <div id="paidList" class="guest-list"></div>
+</div>
+
+<!-- TAB: Offene Deckel -->
+<div id="tab-offen" class="tab-content">
+  <div class="controls">
+    <p style="color:#ccc;">Alle offenen Deckel – bleiben bis zur Bezahlung erhalten.</p>
+  </div>
+  <div id="openTabList" class="guest-list"></div>
+</div>
+
+<!-- TAB: Tageseinnahmen -->
+<div id="tab-einnahmen" class="tab-content">
+  <div class="date-selector">
+    <label>Datum auswählen: </label>
+    <select id="dateSelect" onchange="renderEarnings()"></select>
+  </div>
+  <div class="controls" style="background:#2d2d44; padding:12px; border-radius:8px; border:2px solid #f39c12;">
+    <label style="align-self:center; color:#f39c12; font-weight:600;">Essenskosten für diesen Tag:</label>
+    <input type="number" id="foodCostInput" step="0.10" min="0" placeholder="z.B. 35.00" style="max-width:160px;" onchange="setFoodCostForSelectedDate(this.value)">
+    <span style="align-self:center; color:#ccc;">€ – wird vom Gewinn abgezogen</span>
+  </div>
+  <div id="earningsContent"></div>
+</div>
+
+<!-- TAB: Monatseinnahmen -->
+<div id="tab-monat" class="tab-content">
+  <div class="date-selector">
+    <label>Monat auswählen: </label>
+    <select id="monthSelect" onchange="renderMonthOverview()"></select>
+  </div>
+  <div id="monthContent"></div>
+</div>
+
+<!-- TAB: Jahresübersicht -->
+<div id="tab-jahr" class="tab-content">
+  <div class="date-selector">
+    <label>Jahr auswählen: </label>
+    <select id="yearSelect" onchange="renderYearOverview()"></select>
+  </div>
+  <div id="yearContent"></div>
+</div>
+
+<!-- TAB: Automateneinnahmen -->
+<div id="tab-automaten" class="tab-content">
+  <div class="date-selector">
+    <label>Datum der Entleerung:</label>
+    <input type="date" id="automatDate">
+    <label>Betrag:</label>
+    <input type="number" id="automatAmount" step="0.01" min="0" placeholder="z.B. 120.50">
+    <button class="btn btn-primary" onclick="addMachineEntry()">Eintragen</button>
+  </div>
+  <div class="earnings-block" style="border-left-color:#9b59b6; margin-bottom:20px;">
+    <h3 style="color:#9b59b6;">Automateneinnahmen – rein informell</h3>
+    <p style="color:#ccc; line-height:1.5;">Diese Beträge werden separat gespeichert und zusammengezählt. Sie fließen nicht in Tages-, Monats- oder Jahresgewinn ein.</p>
+  </div>
+  <div id="machineContent"></div>
+</div>
+
+<!-- Modal -->
+<div id="modal" class="modal-overlay">
+  <div class="modal">
+    <h3 id="modalTitle">Bestätigung</h3>
+    <p id="modalText">Wirklich?</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Nein / Abbrechen</button>
+      <button class="btn btn-success" id="modalConfirm">Ja, bestätigen</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ============ KONFIGURATION ============
+const PRICES = {
+  bier:     { label: "Bier / Softdrink", price: 2.00, kasse: "sv" },
+  wasser:   { label: "Wasser / Kaffee",  price: 1.50, kasse: "sv" },
+  longdrink:{ label: "Longdrink",        price: 4.50, kasse: "dc" },
+  shots:    { label: "Shots",            price: 1.50, kasse: "dc" },
+  essen:    { label: "Essen (variabel)", price: 0,    kasse: "dc", variable: true },
+  spielgeld:{ label: "Spielgeld (Leihgabe)", price: 2.00, kasse: "loan", loan: true }
+};
+
+// ============ STATE ============
+let state = defaultState();
+
+function setGlobalEssenPrice(val) {
+  const num = parseFloat(String(val).replace(",", "."));
+  state.globalEssenPrice = isNaN(num) ? 0 : num;
+  // Auf alle aktiven Gäste und offene Deckel übernehmen
+  state.active.forEach(g => { g.items.essen.price = state.globalEssenPrice; });
+  state.openTabs.forEach(g => { g.items.essen.price = state.globalEssenPrice; });
+  save();
+  renderGuests();
+  renderOpenTabs();
+}
+
+// ============ SUPABASE / PERSISTENZ ============
+// Optional fest eintragen, damit Nutzer die Felder auf der Login-Seite nicht ausfüllen müssen.
+const DEFAULT_SUPABASE_URL = "https://eksufhtzhesvovvwfvfz.supabase.co";
+const DEFAULT_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVrc3VmaHR6aGVzdm92dndmdmZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4NzcwOTAsImV4cCI6MjA5OTQ1MzA5MH0.38MFHfSKpUCohjPM8DTYQO-uphXas_kYZlH06EeErvw";
+const STATE_ROW_ID = "shared"; // gemeinsame Kasse für alle angemeldeten Benutzer
+
+let session = null;
+let remoteReady = false;
+let saveTimer = null;
+let lastSavedPayload = "";
+
+function defaultState() {
+  return {
+    active: [],
+    paid: [],
+    openTabs: [],
+    earnings: {},
+    foodCosts: {},
+    machineEntries: [],
+    globalEssenPrice: 0,
+    paidDate: todayStr()
+  };
+}
+
+function normalizeState() {
+  state = Object.assign(defaultState(), state || {});
+  state.active = Array.isArray(state.active) ? state.active : [];
+  state.paid = Array.isArray(state.paid) ? state.paid : [];
+  state.openTabs = Array.isArray(state.openTabs) ? state.openTabs : [];
+  state.machineEntries = Array.isArray(state.machineEntries) ? state.machineEntries : [];
+  state.machineEntries = state.machineEntries.filter(e => e && e.date && Number(e.amount) > 0).map(e => ({
+    id: e.id || uid(),
+    date: e.date,
+    amount: Number(e.amount) || 0,
+    createdAt: e.createdAt || new Date().toISOString()
+  }));
+  state.earnings = state.earnings && typeof state.earnings === "object" ? state.earnings : {};
+  state.foodCosts = state.foodCosts && typeof state.foodCosts === "object" ? state.foodCosts : {};
+  Object.keys(state.foodCosts).forEach(d => {
+    const n = Number(state.foodCosts[d]);
+    if (!n || n < 0) delete state.foodCosts[d];
+    else state.foodCosts[d] = n;
+  });
+  state.globalEssenPrice = Number(state.globalEssenPrice) || 0;
+  [state.active, state.openTabs].forEach(list => list.forEach(g => {
+    g.items = g.items || makeEmptyItems();
+    for (const k in PRICES) {
+      if (!g.items[k]) g.items[k] = { count: 0 };
+      if (PRICES[k].variable && typeof g.items[k].price !== "number") g.items[k].price = state.globalEssenPrice || 0;
+    }
+  }));
+  const today = todayStr();
+  if (state.paidDate && state.paidDate !== today) state.paid = [];
+  state.paidDate = today;
+}
+
+function getSupabaseConfig() {
+  const url = (DEFAULT_SUPABASE_URL || localStorage.getItem("kasse_supabase_url") || "").trim().replace(/\/$/, "");
+  const key = (DEFAULT_SUPABASE_ANON_KEY || localStorage.getItem("kasse_supabase_anon_key") || "").trim();
+  return { url, key };
+}
+
+function setAuthMessage(msg) {
+  const el = document.getElementById("authMessage");
+  if (el) el.textContent = msg || "";
+}
+
+function setSyncStatus(msg) {
+  const el = document.getElementById("syncStatus");
+  if (el) el.textContent = msg;
+}
+
+function showAuth(msg) {
+  document.getElementById("authScreen").style.display = "flex";
+  document.getElementById("app").hidden = true;
+  const cfg = getSupabaseConfig();
+  document.getElementById("supabaseUrlInput").value = cfg.url;
+  document.getElementById("supabaseKeyInput").value = cfg.key;
+  setAuthMessage(msg || "");
+}
+
+function showApp() {
+  document.getElementById("authScreen").style.display = "none";
+  document.getElementById("app").hidden = false;
+  document.getElementById("userInfo").textContent = session?.user?.email ? `Angemeldet als ${session.user.email}` : "Angemeldet";
+}
+
+function authHeaders(includeAuth = true, extra = {}) {
+  const cfg = getSupabaseConfig();
+  const headers = Object.assign({ apikey: cfg.key }, extra);
+  if (includeAuth && session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
+  return headers;
+}
+
+async function supabaseFetch(path, options = {}) {
+  const cfg = getSupabaseConfig();
+  if (!cfg.url || !cfg.key) throw new Error("Supabase URL und anon key fehlen.");
+  const res = await fetch(cfg.url + path, options);
+  if (!res.ok) {
+    let text = await res.text().catch(() => "");
+    throw new Error(text || `Supabase Fehler ${res.status}`);
+  }
+  return res;
+}
+
+async function signIn() {
+  const url = document.getElementById("supabaseUrlInput").value.trim().replace(/\/$/, "");
+  const key = document.getElementById("supabaseKeyInput").value.trim();
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  if (!url || !key || !email || !password) {
+    setAuthMessage(DEFAULT_SUPABASE_URL && DEFAULT_SUPABASE_ANON_KEY ? "Bitte E-Mail und Passwort ausfüllen." : "Bitte Supabase URL, anon key, Benutzer/E-Mail und Passwort ausfüllen.");
+    return;
+  }
+  localStorage.setItem("kasse_supabase_url", url);
+  localStorage.setItem("kasse_supabase_anon_key", key);
+  setAuthMessage("Anmeldung läuft...");
+  try {
+    const res = await supabaseFetch("/auth/v1/token?grant_type=password", {
+      method: "POST",
+      headers: authHeaders(false, { "Content-Type": "application/json" }),
+      body: JSON.stringify({ email, password })
+    });
+    session = await res.json();
+    localStorage.setItem("kasse_supabase_session", JSON.stringify(session));
+    await loadRemoteState();
+    showApp();
+    renderAll();
+    setSyncStatus("Cloud geladen");
+  } catch (err) {
+    session = null;
+    localStorage.removeItem("kasse_supabase_session");
+    let details = "";
+    try {
+      const msg = JSON.parse(err.message);
+      details = msg.msg || msg.message || err.message;
+    } catch(e) {
+      details = err.message || "Unbekannter Fehler";
+    }
+    setAuthMessage("Anmeldung fehlgeschlagen: " + details);
+    console.error(err);
+  }
+}
+
+async function signUp() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  if (!email || !password) {
+    setAuthMessage("Bitte E-Mail und Passwort eingeben, dann Konto erstellen.");
+    return;
+  }
+  setAuthMessage("Konto wird erstellt...");
+  try {
+    const res = await supabaseFetch("/auth/v1/signup", {
+      method: "POST",
+      headers: authHeaders(false, { "Content-Type": "application/json" }),
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (data.session) {
+      session = data.session;
+      localStorage.setItem("kasse_supabase_session", JSON.stringify(session));
+      await loadRemoteState();
+      showApp();
+      renderAll();
+      setSyncStatus("Cloud geladen");
+    } else {
+      setAuthMessage("Konto erstellt. Falls E-Mail-Bestätigung aktiv ist: E-Mail bestätigen, dann anmelden.");
+    }
+  } catch (err) {
+    let details = "";
+    try {
+      const msg = JSON.parse(err.message);
+      details = msg.msg || msg.message || err.message;
+    } catch(e) {
+      details = err.message || "Unbekannter Fehler";
+    }
+    setAuthMessage("Konto konnte nicht erstellt werden: " + details);
+    console.error(err);
+  }
+}
+
+async function signOut() {
+  try {
+    if (session?.access_token) {
+      await supabaseFetch("/auth/v1/logout", { method: "POST", headers: authHeaders(true) });
+    }
+  } catch(e) {}
+  session = null;
+  remoteReady = false;
+  localStorage.removeItem("kasse_supabase_session");
+  showAuth("Abgemeldet.");
+}
+
+async function refreshSession() {
+  const raw = localStorage.getItem("kasse_supabase_session");
+  if (!raw) return false;
+  try {
+    const old = JSON.parse(raw);
+    if (!old.refresh_token) return false;
+    session = old;
+    const res = await supabaseFetch("/auth/v1/token?grant_type=refresh_token", {
+      method: "POST",
+      headers: authHeaders(false, { "Content-Type": "application/json" }),
+      body: JSON.stringify({ refresh_token: old.refresh_token })
+    });
+    session = await res.json();
+    localStorage.setItem("kasse_supabase_session", JSON.stringify(session));
+    return true;
+  } catch (e) {
+    session = null;
+    localStorage.removeItem("kasse_supabase_session");
+    return false;
+  }
+}
+
+function save() {
+  normalizeState();
+  localStorage.setItem("kasse_state_cache", JSON.stringify(state));
+  if (remoteReady) scheduleRemoteSave();
+}
+
+function scheduleRemoteSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveRemoteState, 700);
+  setSyncStatus("Änderungen werden gespeichert...");
+}
+
+async function saveRemoteState() {
+  if (!remoteReady || !session?.access_token) return;
+  normalizeState();
+  const payload = JSON.stringify(state);
+  if (payload === lastSavedPayload) {
+    setSyncStatus("Cloud aktuell");
+    return;
+  }
+  try {
+    await supabaseFetch("/rest/v1/kasse_state", {
+      method: "POST",
+      headers: authHeaders(true, {
+        "Content-Type": "application/json",
+        "Prefer": "resolution=merge-duplicates,return=minimal"
+      }),
+      body: JSON.stringify({
+        id: STATE_ROW_ID,
+        data: state,
+        updated_at: new Date().toISOString(),
+        updated_by: session.user?.id || null
+      })
+    });
+    lastSavedPayload = payload;
+    setSyncStatus("Cloud gespeichert");
+  } catch (err) {
+    setSyncStatus("Cloud-Fehler: nicht gespeichert");
+    console.error(err);
+  }
+}
+
+async function loadRemoteState() {
+  setSyncStatus("Cloud wird geladen...");
+  const res = await supabaseFetch(`/rest/v1/kasse_state?id=eq.${encodeURIComponent(STATE_ROW_ID)}&select=data`, {
+    method: "GET",
+    headers: authHeaders(true)
+  });
+  const rows = await res.json();
+  if (rows.length && rows[0].data) {
+    state = rows[0].data;
+  } else {
+    const cached = localStorage.getItem("kasse_state_cache") || localStorage.getItem("kasse_state");
+    state = cached ? JSON.parse(cached) : defaultState();
+  }
+  normalizeState();
+  remoteReady = true;
+  lastSavedPayload = JSON.stringify(state);
+  localStorage.setItem("kasse_state_cache", JSON.stringify(state));
+  if (!rows.length) await saveRemoteState();
+}
+
+async function syncFromCloud() {
+  if (!remoteReady) return;
+  try {
+    await loadRemoteState();
+    renderAll();
+    setSyncStatus("Cloud neu geladen");
+  } catch (err) {
+    setSyncStatus("Cloud konnte nicht geladen werden");
+    console.error(err);
+  }
+}
+
+function renderAll() {
+  document.getElementById("globalEssenPrice").value = state.globalEssenPrice || "";
+  renderGuests();
+  renderOpenTabs();
+  if (document.getElementById("tab-einnahmen").classList.contains("active")) renderDateSelect();
+  if (document.getElementById("tab-monat").classList.contains("active")) renderMonthSelect();
+  if (document.getElementById("tab-jahr").classList.contains("active")) renderYearSelect();
+  if (document.getElementById("tab-automaten").classList.contains("active")) renderMachineEntries();
+}
+
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+
+// ============ HELFER ============
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+function makeEmptyItems() {
+  const items = {};
+  for (const k in PRICES) {
+    items[k] = { count: 0 };
+    if (PRICES[k].variable) items[k].price = state.globalEssenPrice || 0;
+  }
+  return items;
+}
+
+function calcTotals(guest) {
+  let total = 0, sv = 0, dc = 0, loan = 0;
+  for (const k in PRICES) {
+    const conf = PRICES[k];
+    const it = guest.items[k];
+    if (!it || !it.count) continue;
+    const unit = conf.variable ? (it.price || 0) : conf.price;
+    const sum = unit * it.count;
+    total += sum;
+    if (conf.kasse === "sv") sv += sum;
+    else if (conf.kasse === "loan") loan += sum;
+    else dc += sum;
+  }
+  return { total, sv, dc, loan, profit: sv + dc };
+}
+
+function fmt(n) { return n.toFixed(2).replace(".", ",") + " €"; }
+
+// ============ TAB-WECHSEL ============
+function switchTab(name) {
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+  const btn = Array.from(document.querySelectorAll(".tab-btn")).find(b => (b.getAttribute("onclick") || "").includes("'" + name + "'"));
+  if (btn) btn.classList.add("active");
+  document.getElementById("tab-" + name).classList.add("active");
+  if (name === "einnahmen") renderDateSelect();
+  if (name === "monat") renderMonthSelect();
+  if (name === "jahr") renderYearSelect();
+  if (name === "automaten") renderMachineEntries();
+  if (name === "offen") renderOpenTabs();
+}
+
+// ============ GAST HINZUFÜGEN ============
+function addGuest() {
+  const inp = document.getElementById("searchInput");
+  const name = inp.value.trim();
+  if (!name) { alert("Bitte Namen eingeben!"); return; }
+  // Falls Gast bereits existiert (aktiv), nichts tun
+  if (state.active.find(g => g.name.toLowerCase() === name.toLowerCase())) {
+    alert("Gast '" + name + "' existiert bereits in der aktuellen Liste.");
+    return;
+  }
+  state.active.push({ id: uid(), name, items: makeEmptyItems() });
+  inp.value = "";
+  save();
+  renderGuests();
+}
+
+function handleSearch() {
+  renderGuests();
+}
+
+// ============ COUNTER ============
+function changeCount(id, key, delta) {
+  const g = state.active.find(x => x.id === id);
+  if (!g) return;
+  g.items[key].count = Math.max(0, (g.items[key].count || 0) + delta);
+  save();
+  renderGuests();
+}
+
+function setEssenPrice(id, val) {
+  const g = state.active.find(x => x.id === id);
+  if (!g) return;
+  const num = parseFloat(String(val).replace(",", "."));
+  g.items.essen.price = isNaN(num) ? 0 : num;
+  save();
+  // Nur Totals aktualisieren, kein Full-Re-Render (damit Input-Fokus bleibt)
+  updateTotal(id);
+}
+
+function updateTotal(id) {
+  const g = state.active.find(x => x.id === id) || state.openTabs.find(x => x.id === id);
+  if (!g) return;
+  const t = calcTotals(g);
+  const el = document.querySelector(`[data-total="${id}"]`);
+  if (el) el.textContent = fmt(t.total);
+}
+
+// ============ RENDER: AKTUELLE GÄSTE ============
+function renderGuests() {
+  const list = document.getElementById("guestList");
+  const search = document.getElementById("searchInput").value.trim().toLowerCase();
+  const filtered = search
+    ? state.active.filter(g => g.name.toLowerCase().includes(search))
+    : state.active;
+
+  document.getElementById("badgeAktuell").textContent = state.active.length;
+  document.getElementById("badgeOffen").textContent = state.openTabs.length;
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="empty">' + (state.active.length === 0 ? "Noch keine Gäste. Namen oben eingeben und hinzufügen." : "Keine Treffer für Suche.") + '</div>';
+  } else {
+    list.innerHTML = filtered.map(g => renderGuestCard(g, !!search)).join("");
+  }
+
+  // Bezahlt-heute Liste
+  const paidList = document.getElementById("paidList");
+  if (state.paid.length === 0) {
+    paidList.innerHTML = '<div class="empty">Noch niemand hat heute bezahlt.</div>';
+  } else {
+    paidList.innerHTML = state.paid.map(p => `
+      <div class="guest-card paid">
+        <div class="guest-name">${escapeHtml(p.name)} <span class="total">${fmt(p.total)}</span></div>
+        <div style="color:#999; font-size:13px;">Bezahlt um ${p.time}</div>
+      </div>
+    `).join("");
+  }
+}
+
+function renderGuestCard(g, highlight) {
+  const t = calcTotals(g);
+  const rows = Object.keys(PRICES).map(k => {
+    const conf = PRICES[k];
+    const it = g.items[k];
+    const priceLabel = conf.variable
+      ? `${fmt(it.price || 0)} pro Portion <span style="color:#e67e22;">(global)</span>`
+      : (conf.loan ? `${fmt(conf.price)} <span class="loan-note">Leihgabe – kein Gewinn</span>` : fmt(conf.price));
+    return `
+      <div class="item-row">
+        <div class="item-label">${conf.label}<span class="price">${priceLabel}</span></div>
+        <div class="counter">
+          <button class="minus" onclick="changeCount('${g.id}','${k}',-1)">−</button>
+          <span class="count">${it.count || 0}</span>
+          <button onclick="changeCount('${g.id}','${k}',1)">+</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  return `
+    <div class="guest-card ${highlight ? "highlight" : ""}">
+      <div class="guest-name">${escapeHtml(g.name)} <span class="total" data-total="${g.id}">${fmt(t.total)}</span></div>
+      ${rows}
+      <div class="card-actions">
+        <button class="btn btn-success" onclick="askPay('${g.id}')">💰 Bezahlt</button>
+        <button class="btn btn-warning" onclick="moveToOpenTab('${g.id}')">📋 Offener Deckel</button>
+        <button class="btn btn-danger" onclick="askRemove('${g.id}')">✖</button>
+      </div>
+    </div>
+  `;
+}
+
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
+function escapeAttr(s) { return String(s).replace(/'/g, "\\'"); }
+
+// ============ BEZAHLEN ============
+function askPay(id) {
+  const g = state.active.find(x => x.id === id) || state.openTabs.find(x => x.id === id);
+  if (!g) return;
+  const t = calcTotals(g);
+  if (t.total <= 0) {
+    if (!confirm("Betrag ist 0,00 €. Trotzdem als bezahlt markieren?")) return;
+  }
+  showModal("Bezahlung bestätigen",
+    `Hat <b>${escapeHtml(g.name)}</b> wirklich <b>${fmt(t.total)}</b> bezahlt?`,
+    () => confirmPay(id));
+}
+
+function confirmPay(id) {
+  let g = state.active.find(x => x.id === id);
+  let fromOpen = false;
+  if (!g) {
+    g = state.openTabs.find(x => x.id === id);
+    fromOpen = true;
+  }
+  if (!g) return;
+  const t = calcTotals(g);
+  // In Tageseinnahmen speichern
+  const today = todayStr();
+  if (!state.earnings[today]) state.earnings[today] = { entries: [] };
+  state.earnings[today].entries.push({
+    name: g.name,
+    items: JSON.parse(JSON.stringify(g.items)),
+    total: t.total, sv: t.sv, dc: t.dc, loan: t.loan,
+    time: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
+    fromOpen
+  });
+  // In paid heute
+  state.paid.push({ name: g.name, total: t.total, time: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) });
+  state.paidDate = today;
+  // Aus aktiv oder openTabs entfernen
+  if (fromOpen) state.openTabs = state.openTabs.filter(x => x.id !== id);
+  else state.active = state.active.filter(x => x.id !== id);
+  save();
+  closeModal();
+  renderGuests();
+  renderOpenTabs();
+}
+
+// ============ OFFENER DECKEL ============
+function moveToOpenTab(id) {
+  const g = state.active.find(x => x.id === id);
+  if (!g) return;
+  state.openTabs.push(g);
+  state.active = state.active.filter(x => x.id !== id);
+  save();
+  renderGuests();
+  renderOpenTabs();
+}
+
+function renderOpenTabs() {
+  const list = document.getElementById("openTabList");
+  document.getElementById("badgeOffen").textContent = state.openTabs.length;
+  if (state.openTabs.length === 0) {
+    list.innerHTML = '<div class="empty">Keine offenen Deckel.</div>';
+    return;
+  }
+  list.innerHTML = state.openTabs.map(g => {
+    const t = calcTotals(g);
+    const rows = Object.keys(PRICES).map(k => {
+      const conf = PRICES[k];
+      const it = g.items[k];
+      if (!it.count) return "";
+      const unit = conf.variable ? (it.price || 0) : conf.price;
+      return `<div class="item-row"><div class="item-label">${conf.label}</div><div>${it.count} × ${fmt(unit)} = <b>${fmt(unit * it.count)}</b></div></div>`;
+    }).join("");
+    return `
+      <div class="guest-card open-tab">
+        <div class="guest-name">${escapeHtml(g.name)} <span class="total">${fmt(t.total)}</span></div>
+        ${rows || '<div class="empty" style="padding:10px;">Keine Positionen</div>'}
+        <div class="card-actions">
+          <button class="btn btn-success" onclick="askPay('${g.id}')">💰 Bezahlt</button>
+          <button class="btn btn-danger" onclick="askRemoveOpen('${g.id}')">✖ Löschen</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+// ============ GAST LÖSCHEN ============
+function askRemove(id) {
+  const g = state.active.find(x => x.id === id);
+  if (!g) return;
+  showModal("Gast löschen",
+    `Wirklich <b>${escapeHtml(g.name)}</b> aus der aktuellen Liste entfernen? (ohne Bezahlung)`,
+    () => {
+      state.active = state.active.filter(x => x.id !== id);
+      save(); closeModal(); renderGuests();
+    });
+}
+function askRemoveOpen(id) {
+  const g = state.openTabs.find(x => x.id === id);
+  if (!g) return;
+  showModal("Offenen Deckel löschen",
+    `Wirklich <b>${escapeHtml(g.name)}</b> löschen? (ohne Bezahlung)`,
+    () => {
+      state.openTabs = state.openTabs.filter(x => x.id !== id);
+      save(); closeModal(); renderOpenTabs();
+    });
+}
+
+// ============ ALLES LÖSCHEN ============
+function confirmClearAll() {
+  showModal("Alles löschen",
+    "Wirklich <b>ALLE aktuellen Gäste</b> und die <b>heute-bezahlt-Liste</b> löschen?<br><br>⚠️ Offene Deckel und Tageseinnahmen bleiben erhalten.",
+    () => {
+      state.active = [];
+      state.paid = [];
+      save(); closeModal(); renderGuests();
+    });
+}
+
+// ============ TAGESEINNAHMEN ============
+function renderDateSelect() {
+  const sel = document.getElementById("dateSelect");
+  const dates = getAllDates();
+  const today = todayStr();
+  if (!dates.includes(today)) dates.unshift(today);
+  sel.innerHTML = dates.map(d => `<option value="${d}">${formatDate(d)}${d === today ? " (heute)" : ""}</option>`).join("");
+  renderEarnings();
+}
+
+function getAllDates() {
+  const set = new Set(Object.keys(state.earnings || {}));
+  Object.keys(state.foodCosts || {}).forEach(d => set.add(d));
+  return Array.from(set).sort().reverse();
+}
+
+function formatDate(iso) {
+  const [y,m,d] = iso.split("-");
+  return `${d}.${m}.${y}`;
+}
+
+function formatMonth(monthKey) {
+  const [y,m] = monthKey.split("-");
+  return `${m}.${y}`;
+}
+
+function getFoodCost(date) {
+  return Number(state.foodCosts?.[date]) || 0;
+}
+
+function setFoodCostForSelectedDate(val) {
+  const sel = document.getElementById("dateSelect");
+  const date = sel.value || todayStr();
+  const num = parseFloat(String(val).replace(",", "."));
+  if (!state.foodCosts) state.foodCosts = {};
+  if (!num || num < 0) delete state.foodCosts[date];
+  else state.foodCosts[date] = num;
+  save();
+  renderEarnings();
+}
+
+function getDayTotals(date) {
+  const day = state.earnings[date] || { entries: [] };
+  let svTotal = 0, dcTotal = 0, loanTotal = 0;
+  const svBreakdown = { bier: 0, wasser: 0 };
+  const dcBreakdown = { longdrink: 0, shots: 0, essen: 0 };
+  const loanBreakdown = { spielgeld: 0 };
+
+  day.entries.forEach(e => {
+    const recalculated = calcTotals({ items: e.items || {} });
+    svTotal += recalculated.sv;
+    dcTotal += recalculated.dc;
+    loanTotal += recalculated.loan;
+    for (const k in PRICES) {
+      const conf = PRICES[k];
+      const it = e.items?.[k];
+      if (!it || !it.count) continue;
+      const unit = conf.variable ? (it.price || 0) : conf.price;
+      const sum = unit * it.count;
+      if (conf.kasse === "sv") svBreakdown[k] = (svBreakdown[k] || 0) + sum;
+      else if (conf.kasse === "loan") loanBreakdown[k] = (loanBreakdown[k] || 0) + sum;
+      else dcBreakdown[k] = (dcBreakdown[k] || 0) + sum;
+    }
+  });
+
+  const foodCost = getFoodCost(date);
+  return {
+    date,
+    entries: day.entries || [],
+    svTotal,
+    dcTotal,
+    loanTotal,
+    foodCost,
+    grossProfit: svTotal + dcTotal,
+    netProfit: svTotal + dcTotal - foodCost,
+    cashMovement: svTotal + dcTotal + loanTotal,
+    svBreakdown,
+    dcBreakdown,
+    loanBreakdown
+  };
+}
+
+function addTotals(a, b) {
+  a.svTotal += b.svTotal;
+  a.dcTotal += b.dcTotal;
+  a.loanTotal += b.loanTotal;
+  a.foodCost += b.foodCost;
+  a.grossProfit += b.grossProfit;
+  a.netProfit += b.netProfit;
+  a.cashMovement += b.cashMovement;
+  a.entriesCount += b.entries.length;
+  for (const k in b.svBreakdown) a.svBreakdown[k] = (a.svBreakdown[k] || 0) + b.svBreakdown[k];
+  for (const k in b.dcBreakdown) a.dcBreakdown[k] = (a.dcBreakdown[k] || 0) + b.dcBreakdown[k];
+  for (const k in b.loanBreakdown) a.loanBreakdown[k] = (a.loanBreakdown[k] || 0) + b.loanBreakdown[k];
+}
+
+function emptyAggregate() {
+  return {
+    svTotal: 0, dcTotal: 0, loanTotal: 0, foodCost: 0,
+    grossProfit: 0, netProfit: 0, cashMovement: 0, entriesCount: 0,
+    svBreakdown: { bier: 0, wasser: 0 },
+    dcBreakdown: { longdrink: 0, shots: 0, essen: 0 },
+    loanBreakdown: { spielgeld: 0 }
+  };
+}
+
+function summaryBlocks(t, title) {
+  const dcNet = t.dcTotal - t.foodCost;
+  const totalNet = t.svTotal + dcNet;
+  return `
+    <div class="earnings-summary">
+      <div class="earnings-block" style="border-left-color:#3498db;">
+        <h3 style="color:#3498db;">🏟️ SV Netphen</h3>
+        <div class="row"><span>Bier / Softdrink</span><b>${fmt(t.svBreakdown.bier || 0)}</b></div>
+        <div class="row"><span>Wasser / Kaffee</span><b>${fmt(t.svBreakdown.wasser || 0)}</b></div>
+        <div class="row total-row"><span>Summe SV Netphen</span><b>${fmt(t.svTotal)}</b></div>
+      </div>
+      <div class="earnings-block" style="border-left-color:#e74c3c;">
+        <h3 style="color:#e74c3c;">🎯 DC Dartageddon</h3>
+        <div class="row"><span>Longdrink</span><b>${fmt(t.dcBreakdown.longdrink || 0)}</b></div>
+        <div class="row"><span>Shots</span><b>${fmt(t.dcBreakdown.shots || 0)}</b></div>
+        <div class="row"><span>Essen Einnahmen</span><b>${fmt(t.dcBreakdown.essen || 0)}</b></div>
+        <div class="row"><span>Essenskosten</span><b>− ${fmt(t.foodCost)}</b></div>
+        <div class="row"><span>Spielgeld-Leihgabe (kein Gewinn)</span><b>${fmt(t.loanBreakdown.spielgeld || 0)}</b></div>
+        <div class="row total-row"><span>Summe DC Dartageddon nach Essenskosten</span><b>${fmt(dcNet)}</b></div>
+        <div class="row"><span>Kassenbewegung DC inkl. Spielgeld</span><b>${fmt(dcNet + t.loanTotal)}</b></div>
+      </div>
+      <div class="earnings-block" style="border-left-color:#2ecc71;">
+        <h3>💰 ${title}</h3>
+        <div class="row"><span>SV Netphen</span><b>${fmt(t.svTotal)}</b></div>
+        <div class="row"><span>DC Dartageddon nach Essenskosten</span><b>${fmt(dcNet)}</b></div>
+        <div class="row total-row"><span>Gewinn / echte Einnahmen gesamt</span><b>${fmt(totalNet)}</b></div>
+        <div class="row"><span>Kassenbewegung inkl. Spielgeld-Rückzahlung</span><b>${fmt(totalNet + t.loanTotal)}</b></div>
+      </div>
+    </div>`;
+}
+
+function renderEarnings() {
+  const sel = document.getElementById("dateSelect");
+  const date = sel.value || todayStr();
+  const t = getDayTotals(date);
+  const container = document.getElementById("earningsContent");
+  const costInput = document.getElementById("foodCostInput");
+  if (costInput) costInput.value = t.foodCost ? String(t.foodCost.toFixed(2)) : "";
+
+  const entriesHtml = t.entries.length === 0
+    ? '<div class="empty">Für dieses Datum gibt es noch keine Einnahmen.</div>'
+    : t.entries.map(e => {
+        const rt = calcTotals({ items: e.items || {} });
+        return `
+        <div class="item-row" style="padding: 10px; background:#1a1a2e; margin-bottom:6px; border-radius:6px;">
+          <div class="item-label"><b>${escapeHtml(e.name)}</b> <span style="color:#999;">um ${e.time}${e.fromOpen ? " (aus offenem Deckel)" : ""}</span></div>
+          <div><b>${fmt(rt.total)}</b> <span style="color:#999;">(SV: ${fmt(rt.sv)} / DC: ${fmt(rt.dc)} / Spielgeld-Leihgabe: ${fmt(rt.loan)})</span></div>
+        </div>`;
+      }).join("");
+
+  container.innerHTML = `
+    ${summaryBlocks(t, `Tageseinnahmen ${formatDate(date)}`)}
+    <h3 style="margin-bottom:10px;">Einzelne Zahlungen (${t.entries.length})</h3>
+    ${entriesHtml}
+    ${t.entries.length > 0 ? `<button class="btn btn-danger" style="margin-top:15px;" onclick="askDeleteDay('${date}')">🗑️ Diesen Tag löschen</button>` : ""}
+  `;
+}
+
+function getAvailableMonths() {
+  const set = new Set(getAllDates().map(d => d.slice(0,7)));
+  set.add(todayStr().slice(0,7));
+  return Array.from(set).sort().reverse();
+}
+
+function renderMonthSelect() {
+  const sel = document.getElementById("monthSelect");
+  const months = getAvailableMonths();
+  const current = todayStr().slice(0,7);
+  sel.innerHTML = months.map(m => `<option value="${m}">${formatMonth(m)}${m === current ? " (aktuell)" : ""}</option>`).join("");
+  renderMonthOverview();
+}
+
+function renderMonthOverview() {
+  const month = document.getElementById("monthSelect").value || todayStr().slice(0,7);
+  const dates = getAllDates().filter(d => d.startsWith(month));
+  const total = emptyAggregate();
+  const rows = dates.map(d => {
+    const t = getDayTotals(d);
+    addTotals(total, t);
+    return `<div class="item-row" style="padding:10px; background:#1a1a2e; margin-bottom:6px; border-radius:6px;">
+      <div class="item-label"><b>${formatDate(d)}</b> <span style="color:#999;">${t.entries.length} Zahlungen</span></div>
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <b>${fmt(t.netProfit)}</b>
+        <span style="color:#999;">brutto ${fmt(t.grossProfit)} / DC-Essenskosten −${fmt(t.foodCost)} / Spielgeld ${fmt(t.loanTotal)}</span>
+        <button class="btn btn-primary" style="padding:7px 10px; font-size:12px;" onclick="editDayFromMonth('${d}')">✏️ Tag bearbeiten</button>
+      </div>
+    </div>`;
+  }).join("");
+  document.getElementById("monthContent").innerHTML = `
+    ${summaryBlocks(total, `Monatseinnahmen ${formatMonth(month)}`)}
+    <h3 style="margin-bottom:10px;">Tage im Monat (${dates.length})</h3>
+    ${dates.length ? rows : '<div class="empty">Für diesen Monat gibt es noch keine Einnahmen.</div>'}
+  `;
+}
+
+function editDayFromMonth(date) {
+  switchTab("einnahmen");
+  const sel = document.getElementById("dateSelect");
+  if (sel) {
+    if (!Array.from(sel.options).some(o => o.value === date)) {
+      const opt = document.createElement("option");
+      opt.value = date;
+      opt.textContent = formatDate(date);
+      sel.appendChild(opt);
+    }
+    sel.value = date;
+    renderEarnings();
+  }
+}
+
+function getAvailableYears() {
+  const set = new Set(getAllDates().map(d => d.slice(0,4)));
+  set.add(todayStr().slice(0,4));
+  return Array.from(set).sort().reverse();
+}
+
+function renderYearSelect() {
+  const sel = document.getElementById("yearSelect");
+  const years = getAvailableYears();
+  const current = todayStr().slice(0,4);
+  sel.innerHTML = years.map(y => `<option value="${y}">${y}${y === current ? " (aktuell)" : ""}</option>`).join("");
+  renderYearOverview();
+}
+
+function renderYearOverview() {
+  const year = document.getElementById("yearSelect").value || todayStr().slice(0,4);
+  const months = getAvailableMonths().filter(m => m.startsWith(year));
+  const total = emptyAggregate();
+  const rows = months.map(m => {
+    const monthTotal = emptyAggregate();
+    getAllDates().filter(d => d.startsWith(m)).forEach(d => addTotals(monthTotal, getDayTotals(d)));
+    addTotals(total, Object.assign({ entries: Array(monthTotal.entriesCount) }, monthTotal));
+    return `<div class="item-row" style="padding:10px; background:#1a1a2e; margin-bottom:6px; border-radius:6px;">
+      <div class="item-label"><b>${formatMonth(m)}</b> <span style="color:#999;">${monthTotal.entriesCount} Zahlungen</span></div>
+      <div><b>${fmt(monthTotal.netProfit)}</b> <span style="color:#999;">brutto ${fmt(monthTotal.grossProfit)} / DC-Essenskosten −${fmt(monthTotal.foodCost)} / Spielgeld ${fmt(monthTotal.loanTotal)}</span></div>
+    </div>`;
+  }).join("");
+  document.getElementById("yearContent").innerHTML = `
+    ${summaryBlocks(total, `Jahresübersicht ${year}`)}
+    <h3 style="margin-bottom:10px;">Monate im Jahr (${months.length})</h3>
+    ${months.length ? rows : '<div class="empty">Für dieses Jahr gibt es noch keine Einnahmen.</div>'}
+  `;
+}
+
+function askDeleteDay(date) {
+  showModal("Tag löschen",
+    `Wirklich <b>alle Einnahmen vom ${formatDate(date)}</b> löschen? Das kann nicht rückgängig gemacht werden!`,
+    () => {
+      delete state.earnings[date];
+      if (state.foodCosts) delete state.foodCosts[date];
+      save(); closeModal(); renderDateSelect();
+    });
+}
+
+
+// ============ AUTOMATENEINNAHMEN ============
+function addMachineEntry() {
+  const dateInput = document.getElementById("automatDate");
+  const amountInput = document.getElementById("automatAmount");
+  const date = dateInput.value || todayStr();
+  const amount = parseFloat(String(amountInput.value).replace(",", "."));
+  if (!date) { alert("Bitte Datum eintragen."); return; }
+  if (!amount || amount <= 0) { alert("Bitte einen Betrag größer als 0,00 € eintragen."); return; }
+  if (!state.machineEntries) state.machineEntries = [];
+  state.machineEntries.push({
+    id: uid(),
+    date,
+    amount,
+    createdAt: new Date().toISOString()
+  });
+  amountInput.value = "";
+  save();
+  renderMachineEntries();
+}
+
+function askDeleteMachineEntry(id) {
+  const entry = (state.machineEntries || []).find(e => e.id === id);
+  if (!entry) return;
+  showModal("Automateneinnahme löschen",
+    `Wirklich den Eintrag vom <b>${formatDate(entry.date)}</b> über <b>${fmt(entry.amount)}</b> löschen?`,
+    () => {
+      state.machineEntries = (state.machineEntries || []).filter(e => e.id !== id);
+      save(); closeModal(); renderMachineEntries();
+    });
+}
+
+function renderMachineEntries() {
+  const dateInput = document.getElementById("automatDate");
+  if (dateInput && !dateInput.value) dateInput.value = todayStr();
+  const entries = (state.machineEntries || [])
+    .slice()
+    .sort((a,b) => (b.date || "").localeCompare(a.date || "") || (b.createdAt || "").localeCompare(a.createdAt || ""));
+  const total = entries.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+  const byYear = {};
+  entries.forEach(e => {
+    const y = (e.date || "").slice(0,4) || "ohne Jahr";
+    byYear[y] = (byYear[y] || 0) + (Number(e.amount) || 0);
+  });
+  const yearRows = Object.keys(byYear).sort().reverse().map(y => `
+    <div class="row"><span>${escapeHtml(y)}</span><b>${fmt(byYear[y])}</b></div>
+  `).join("");
+  const listHtml = entries.length === 0
+    ? '<div class="empty">Noch keine Automateneinnahmen eingetragen.</div>'
+    : entries.map(e => `
+      <div class="item-row" style="padding:10px; background:#1a1a2e; margin-bottom:6px; border-radius:6px;">
+        <div class="item-label"><b>${formatDate(e.date)}</b> <span style="color:#999;">Entleerung</span></div>
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <b>${fmt(Number(e.amount) || 0)}</b>
+          <button class="btn btn-danger" style="padding:7px 10px; font-size:12px;" onclick="askDeleteMachineEntry('${e.id}')">Löschen</button>
+        </div>
+      </div>
+    `).join("");
+
+  document.getElementById("machineContent").innerHTML = `
+    <div class="earnings-summary">
+      <div class="earnings-block" style="border-left-color:#9b59b6;">
+        <h3 style="color:#9b59b6;">Gesamt Automateneinnahmen</h3>
+        ${yearRows || '<div class="row"><span>Keine Einträge</span><b>0,00 €</b></div>'}
+        <div class="row total-row"><span>Summe gesamt</span><b>${fmt(total)}</b></div>
+      </div>
+    </div>
+    <h3 style="margin-bottom:10px;">Entleerungen (${entries.length})</h3>
+    ${listHtml}
+  `;
+}
+
+// ============ MODAL ============
+let modalCallback = null;
+function showModal(title, text, cb) {
+  document.getElementById("modalTitle").textContent = title;
+  document.getElementById("modalText").innerHTML = text;
+  modalCallback = cb;
+  document.getElementById("modal").classList.add("active");
+}
+function closeModal() {
+  document.getElementById("modal").classList.remove("active");
+  modalCallback = null;
+}
+document.getElementById("modalConfirm").addEventListener("click", () => {
+  if (modalCallback) modalCallback();
+});
+
+// Enter im Suchfeld = Gast hinzufügen wenn kein Treffer
+document.getElementById("searchInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    const name = e.target.value.trim();
+    if (!name) return;
+    const match = state.active.find(g => g.name.toLowerCase() === name.toLowerCase());
+    if (!match) addGuest();
+    else e.target.value = "";
+    renderGuests();
+  }
+});
+
+// ============ INIT ============
+async function initApp() {
+  const cfg = getSupabaseConfig();
+  document.getElementById("supabaseUrlInput").value = cfg.url;
+  document.getElementById("supabaseKeyInput").value = cfg.key;
+  if (!cfg.url || !cfg.key) {
+    showAuth("Bitte Supabase URL und anon key eintragen.");
+    return;
+  }
+  const ok = await refreshSession();
+  if (!ok) {
+    showAuth("Bitte anmelden.");
+    return;
+  }
+  try {
+    await loadRemoteState();
+    showApp();
+    renderAll();
+    setSyncStatus("Cloud geladen");
+  } catch (err) {
+    console.error(err);
+    showAuth("Cloud konnte nicht geladen werden. Supabase-Setup prüfen.");
+  }
+}
+
+["loginEmail", "loginPassword"].forEach(id => {
+  document.getElementById(id).addEventListener("keydown", (e) => {
+    if (e.key === "Enter") signIn();
+  });
+});
+
+initApp();
+</script>
+</body>
+</html>
